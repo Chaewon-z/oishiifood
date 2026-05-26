@@ -1,40 +1,346 @@
+```html
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oishii Sushi - Self Service Order</title>
     
+    <!-- Tailwind CSS v4 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
+    <!-- React & ReactDOM v18 CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
+    <!-- Babel untuk Kompilasi JSX di Browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- Google Fonts: Playfair Display (Serif Elegan) & Plus Jakarta Sans (UI Bersih) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
 
     <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
         .font-serif {
             font-family: 'Playfair Display', Georgia, serif;
         }
+        /* Custom Scrollbar untuk Nuansa Estetis */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #991b1b;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7f1d1d;
+        }
     </style>
 </head>
-<body>
+<body class="bg-[#fcfaf2] text-gray-900 antialiased min-h-screen">
 
     <div id="root"></div>
 
     <script type="text/babel">
-        // Destrukturisasi hooks dari React global object
         const { useState, useEffect, useRef } = React;
 
-        // Data Menu
+        // Data Menu dengan Gambar Unsplash Resolusi Tinggi
         const FOOD_ITEMS = [
           { id: 1, name: 'Salmon Nigiri', category: 'Sushi', price: 45000, image: 'https://images.unsplash.com/photo-1583623025817-d180a2221d0a?q=80&w=400&auto=format&fit=crop' },
           { id: 2, name: 'Maguro Sashimi', category: 'Sashimi', price: 65000, image: 'https://images.unsplash.com/photo-1605333396915-47ed6b68a00e?q=80&w=400&auto=format&fit=crop' },
           { id: 3, name: 'Tuna Mayo Onigiri', category: 'Onigiri', price: 25000, image: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?q=80&w=400&auto=format&fit=crop' },
+          { id: 4, name: 'Dragon Roll', category: 'Sushi', price: 85000, image: 'https://images.unsplash.com/photo-1617196034183-421b4917c92d?q=80&w=400&auto=format&fit=crop' },
+          { id: 5, name: 'Chicken Katsu Don', category: 'Main Course', price: 55000, image: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?q=80&w=400&auto=format&fit=crop' },
+        ];
+
+        const DRINK_ITEMS = [
+          { id: 7, name: 'Ocha (Hot/Ice)', category: 'Minuman', price: 10000, image: 'https://images.unsplash.com/photo-1582793988951-9aed5509eb97?q=80&w=400&auto=format&fit=crop' },
+          { id: 8, name: 'Matcha Latte', category: 'Minuman', price: 30000, image: 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?q=80&w=400&auto=format&fit=crop' },
+          { id: 9, name: 'Sake (Small)', category: 'Minuman', price: 120000, image: 'https://images.unsplash.com/photo-1598509524136-421cbe2c19f3?q=80&w=400&auto=format&fit=crop' },
+          { id: 10, name: 'Japanese Soda', category: 'Minuman', price: 25000, image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=400&auto=format&fit=crop' },
+        ];
+
+        const PAYMENT_METHODS = [
+          { id: 'qris', name: 'QRIS', icon: '📱', type: 'qr' },
+          { id: 'gopay', name: 'GoPay', icon: '🚀', type: 'phone' },
+          { id: 'dana', name: 'DANA', icon: '💰', type: 'phone' },
+          { id: 'ovo', name: 'OVO', icon: '💜', type: 'phone' },
+        ];
+
+        // Komponen Kustom SVG untuk Menggantikan Lucide-React
+        const Icons = {
+          ShoppingCart: ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+            </svg>
+          ),
+          Trash2: ({ size = 16, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+            </svg>
+          ),
+          Clock: ({ size = 18, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          ),
+          CheckCircle: ({ size = 60, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          ),
+          Table: ({ size = 20, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/>
+            </svg>
+          ),
+          ChevronRight: ({ size = 18, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          ),
+          Utensils: ({ size = 20, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+            </svg>
+          ),
+          Coffee: ({ size = 20, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h12Z"/><path d="M6 2v2"/><path d="M17 12h2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2"/>
+            </svg>
+          ),
+          Smartphone: ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/>
+            </svg>
+          ),
+          QrCode: ({ size = 180, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16V21H16"/><path d="M21 12H16"/><path d="M12 21v-5"/><path d="M12 12H9"/><path d="M12 3v6"/>
+            </svg>
+          ),
+          X: ({ size = 18, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/>
+            </svg>
+          ),
+          LogOut: ({ size = 20, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+            </svg>
+          ),
+          User: ({ size = 16, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          ),
+          ShoppingBag: ({ size = 18, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          ),
+          ArrowLeft: ({ size = 14, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+              <line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+          )
+        };
+
+        function App() {
+          const [step, setStep] = useState('select-table'); 
+          const [selectedTable, setSelectedTable] = useState(null);
+          const [cart, setCart] = useState([]);
+          const [timeLeft, setTimeLeft] = useState(300);
+          const [selectedPayment, setSelectedPayment] = useState(null);
+          const [phoneNumber, setPhoneNumber] = useState('');
+          const [currentTime, setCurrentTime] = useState(new Date());
+          const [isCartOpen, setIsCartOpen] = useState(false);
+
+          const foodRef = useRef(null);
+          const drinkRef = useRef(null);
+
+          // Update jam digital di pojok kanan atas secara realtime
+          useEffect(() => {
+            const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+            return () => clearInterval(timer);
+          }, []);
+
+          // Hitung mundur waktu checkout di halaman pembayaran
+          useEffect(() => {
+            let timer;
+            if (step === 'payment' && timeLeft > 0) {
+              timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+            } else if (timeLeft === 0) {
+              setStep('ordering');
+              setTimeLeft(300);
+              setSelectedPayment(null);
+            }
+            return () => clearInterval(timer);
+          }, [step, timeLeft]);
+
+          const scrollTo = (ref) => {
+            ref.current?.scrollIntoView({ behavior: 'smooth' });
+          };
+
+          const formatPrice = (price) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+          };
+
+          const addToCart = (item) => {
+            const existing = cart.find((i) => i.id === item.id);
+            if (existing) {
+              setCart(cart.map((i) => (i.id === item.id ? { ...i, qty: i.qty + 1 } : i)));
+            } else {
+              setCart([...cart, { ...item, qty: 1 }]);
+            }
+          };
+
+          const removeFromCart = (id) => {
+            setCart(cart.filter((i) => i.id !== id));
+          };
+
+          const totalOrder = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+
+          const formatTimeLimit = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+          };
+
+          const handleLogout = () => {
+            setCart([]);
+            setSelectedTable(null);
+            setStep('select-table');
+          };
+
+          // --- VIEWS ---
+
+          // 1. Tampilan Pilih Nomor Meja
+          const TableSelection = () => (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#fcfaf2] p-6">
+              <div className="text-center mb-12">
+                <h1 className="text-6xl font-serif font-bold text-red-800 mb-2">美味しい</h1>
+                <h2 className="text-2xl font-bold text-gray-800 tracking-[0.3em] uppercase">Oishii Sushi</h2>
+                <p className="text-gray-500 mt-6 italic">Silakan pilih nomor meja Anda untuk memulai pesanan.</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 max-w-2xl w-full">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => {
+                      setSelectedTable(num);
+                      setStep('ordering');
+                    }}
+                    className="aspect-square rounded-[2rem] bg-white border-2 border-red-800 text-red-800 hover:bg-red-800 hover:text-white shadow-lg transition-all duration-300 flex flex-col items-center justify-center font-bold text-3xl cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <Icons.Table size={24} className="mb-2" />
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+
+          // 2. Tampilan Memilih Menu (Makanan & Minuman)
+          const OrderingView = () => (
+            <div className="flex min-h-screen bg-[#fcfaf2]">
+              {/* Sidebar Sisi Kiri */}
+              <aside className="w-20 md:w-64 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 z-50">
+                <div className="p-6 text-center md:text-left border-b border-gray-50">
+                  <h1 className="text-xl md:text-2xl font-serif font-bold text-red-800 leading-none">美味しい</h1>
+                  <h2 className="text-[10px] md:text-xs font-black text-gray-400 tracking-widest uppercase mt-1">Oishii Sushi</h2>
+                </div>
+                
+                <div className="flex-1 p-4 space-y-2 mt-6">
+                  <nav className="space-y-2">
+                    <button 
+                      onClick={() => scrollTo(foodRef)}
+                      className="w-full flex items-center justify-center md:justify-start gap-4 p-4 rounded-2xl hover:bg-red-50 text-gray-500 hover:text-red-800 transition-all font-bold cursor-pointer"
+                    >
+                      <Icons.Utensils size={20} /> <span className="hidden md:block uppercase text-sm">Makanan</span>
+                    </button>
+                    <button 
+                      onClick={() => scrollTo(drinkRef)}
+                      className="w-full flex items-center justify-center md:justify-start gap-4 p-4 rounded-2xl hover:bg-red-50 text-gray-500 hover:text-red-800 transition-all font-bold cursor-pointer"
+                    >
+                      <Icons.Coffee size={20} /> <span className="hidden md:block uppercase text-sm">Minuman</span>
+                    </button>
+                  </nav>
+                </div>
+
+                {/* Info Meja & Logout */}
+                <div className="p-4 border-t border-gray-50">
+                  <div className="flex items-center justify-between bg-gray-50 p-3 rounded-2xl border border-gray-100 group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-800 text-white rounded-lg shadow-sm">
+                        <Icons.User size={16} />
+                      </div>
+                      <span className="hidden md:block font-bold text-gray-700">Meja {selectedTable}</span>
+                    </div>
+                    <button 
+                      onClick={handleLogout}
+                      className="p-2 text-gray-400 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
+                      title="Ganti Meja / Keluar"
+                    >
+                      <Icons.LogOut size={20} />
+                    </button>
+                  </div>
+                </div>
+              </aside>
+
+              {/* Konten Utama */}
+              <main className="flex-1 relative pb-24">
+                {/* Jam mengambang di pojok kanan atas */}
+                <div className="fixed top-6 right-8 z-[60] bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl border border-gray-100 shadow-xl hidden sm:block">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-gray-800 text-lg font-mono font-bold tracking-wider">
+                      {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-6 md:p-12 max-w-6xl mx-auto">
+                  <header className="mb-16">
+                    <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-800">Menu Pilihan</h2>
+                    <div className="w-20 h-1 bg-red-800 mt-4 rounded-full"></div>
+                  </header>
+
+                  <section ref={foodRef} className="mb-20 scroll-mt-24">
+                    <div className="flex items-center gap-4 mb-8">
+                      <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Oishii Makanan</h3>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {FOOD_ITEMS.map((item) => (
+                        <MenuCard key={item.id} item={item} onAdd={addToCart} formatPrice={formatPrice} />
+                      ))}
+                    </div>
+                  </section>
+
+                  <section ref={drinkRef} className="mb-20 scroll-mt-24">
+                    <div className="flex items-center gap-4 mb-8">
+                      <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Oishii Minuman</h3>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {DRINK_ITEMS.map((item) => (
+                        <MenuCard key={item.id} item={item} onAdd={addToCart} formatPrice={formatPrice} />
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Floating Keranjang Belanja */}
+           { id: 3, name: 'Tuna Mayo Onigiri', category: 'Onigiri', price: 25000, image: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?q=80&w=400&auto=format&fit=crop' },
           { id: 4, name: 'Dragon Roll', category: 'Sushi', price: 85000, image: 'https://images.unsplash.com/photo-1617196034183-421b4917c92d?q=80&w=400&auto=format&fit=crop' },
           { id: 5, name: 'Chicken Katsu Don', category: 'Main Course', price: 55000, image: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?q=80&w=400&auto=format&fit=crop' },
         ];
